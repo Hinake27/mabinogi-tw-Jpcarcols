@@ -2,6 +2,8 @@
 
 一個簡單優雅的網頁漸層配色工具，使用傳統日本色，提供即時漸層預覽和完整的顏色資訊。
 
+https://hinake27.github.io/mabinogi-tw-Jpcarcols/
+
 ## 特色功能
 
 - 內建精選傳統日本色
