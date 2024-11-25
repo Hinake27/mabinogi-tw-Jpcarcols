@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .container {
+            display: flex;
+            gap: 8px;
+            padding-top: 12px;
+        }
+
+        .color-section {
+            width: 200px;
+            flex-shrink: 0;
+        }
+
+        .color-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .color-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            padding: 8px;
+            gap: 10px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-card:hover {
+            transform: translateY(-2px) translateZ(0);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .color-card:active {
+            transform: translateY(0) translateZ(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .color-sample {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            border-radius: 3px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .color-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .color-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .color-codes {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .color-hex, .color-rgb {
+            font-family: monospace;
+            color: #444;
+            font-size: 0.95em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .color-id {
+            font-size: 0.8em;
+            color: #999;
+            margin-left: 4px;
+            font-weight: 500;
+            flex-shrink: 0;
+            align-self: flex-start;
+        }
+
+        .selected {
+            transform: translateY(-2px) translateZ(0);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            background: rgba(255, 255, 255, 0.9);
+            border-left: 3px solid #333;
+            padding-left: 5px;
+        }
+
+        .preview {
+            position: fixed;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            gap: 24px;
+        }
+
+        .preview:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .preview-label {
+            font-size: 0.8em;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .preview-value {
+            font-family: monospace;
+            color: #333;
+        }
+
+        .preview-divider {
+            width: 1px;
+            background: rgba(0, 0, 0, 0.1);
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="color-section" id="sectionA">
+            <div class="color-grid">
+                <!-- Colors will be dynamically added here -->
+            </div>
+        </div>
+
+        <div class="color-section" id="sectionB">
+            <div class="color-grid">
+                <!-- Colors will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="preview" id="preview">請從左右兩側各選擇一種顏色</div>
+
+    <script>
+        let colors = [
+            { name: '一斤染', code: '#F08F90', id: '001' },
+            { name: '桃色', code: '#F47983', id: '002' },
+            { name: '紅梅', code: '#DB5A6B', id: '003' },
+            { name: '中紅', code: '#C93756', id: '004' },
+            { name: '桜色', code: '#FCC9B9', id: '005' },
+            { name: '退紅', code: '#FFB3A7', id: '006' },
+            { name: '薄紅', code: '#F2666C', id: '007' },
+            { name: '今樣', code: '#D05A6E', id: '008' },
+            { name: '鴇羽色', code: '#F58F84', id: '009' },
+            { name: '櫻花鼠', code: '#AC8181', id: '010' },
+            { name: '長春色', code: '#B95754', id: '011' },
+            { name: '韓紅花', code: '#C91F37', id: '012' },
+            { name: '臙脂色', code: '#9D2933', id: '013' },
+            { name: '深緋', code: '#7B3B3A', id: '014' },
+            { name: '甚三紅', code: '#F7665A', id: '015' },
+            { name: '水がき', code: '#B56C60', id: '016' },
+            { name: '梅鼠', code: '#97645A', id: '017' },
+            { name: '蘇芳香', code: '#A24F46', id: '018' },
+            { name: '赤紅', code: '#C3272B', id: '019' },
+            { name: '真朱', code: '#8F1D21', id: '020' },
+            { name: '小豆色', code: '#672422', id: '021' },
+            { name: '銀朱', code: '#BC2D29', id: '022' },
+            { name: '海老茶', code: '#5E2824', id: '023' },
+            { name: '栗梅', code: '#8B352D', id: '024' },
+            { name: '曙色', code: '#FA7B62', id: '025' },
+            { name: '珊瑚珠色', code: '#F8674F', id: '026' },
+            { name: '猩猩緋', code: '#DC3023', id: '027' },
+            { name: '芝翫茶', code: '#AB4C3D', id: '028' },
+            { name: '柿涉色', code: '#934337', id: '029' },
+            { name: '紅樺', code: '#9D2B22', id: '030' },
+            { name: '紅鳶', code: '#913228', id: '031' },
+            { name: '紅檜皮', code: '#6F3028', id: '032' },
+            { name: '黒鳶', code: '#351E1C', id: '033' },
+            { name: '紅緋', code: '#F35336', id: '034' },
+            { name: '照柿', code: '#D34E36', id: '035' },
+            { name: '緋', code: '#CF3A24', id: '036' },
+            { name: '江戸茶', code: '#A13D2D', id: '037' },
+            { name: '紅柄色', code: '#913225', id: '038' },
+            { name: '檜皮色', code: '#752E23', id: '039' },
+            { name: '宍色', code: '#F9906F', id: '040' },
+            { name: '洗朱', code: '#FF7952', id: '041' },
+            { name: '赤香色', code: '#F07F5E', id: '042' },
+            { name: 'ときがら茶', code: '#E68364', id: '043' },
+            { name: '黃丹', code: '#FF4E20', id: '044' },
+            { name: '蘇比', code: '#E35C38', id: '045' },
+            { name: '遠州茶', code: '#CB6649', id: '046' },
+            { name: '唐茶', code: '#B35C44', id: '047' },
+            { name: '樺茶', code: '#B14A30', id: '048' },
+            { name: '宗傳唐茶', code: '#9B533F', id: '049' },
+            { name: '雀茶', code: '#8C4736', id: '050' },
+            { name: '栗皮茶', code: '#60281E', id: '051' },
+            { name: '百鹽茶', code: '#542D24', id: '052' },
+            { name: '鳶色', code: '#4C221B', id: '053' },
+            { name: '蘇芳', code: '#7E2639', id: '054' },
+            { name: '東雲色', code: '#F19072', id: '055' },
+            { name: '胡桃染', code: '#9F7462', id: '056' },
+            { name: '蒲色', code: '#B64925', id: '057' },
+            { name: '黃櫨染', code: '#592B1F', id: '058' },
+            { name: '焦茶', code: '#351F19', id: '059' },
+            { name: '深支子', code: '#F57F4F', id: '060' },
+            { name: '洗柿', code: '#EC8254', id: '061' },
+            { name: '代赭色', code: '#9F5233', id: '062' },
+            { name: '赤白橡', code: '#EC956C', id: '063' },
+            { name: '礪茶', code: '#985538', id: '064' },
+            { name: '煎茶色', code: '#824B35', id: '065' },
+            { name: '灑落柿', code: '#FFA26B', id: '066' },
+            { name: '薄柿', code: '#FCA474', id: '067' },
+            { name: '萱草色', code: '#FF8936', id: '068' },
+            { name: '梅染', code: '#FA9258', id: '069' },
+            { name: '紅鬱金', code: '#FB8136', id: '070' },
+            { name: '丁子茶', code: '#8F583C', id: '071' },
+            { name: '憲法染', code: '#2E211B', id: '072' },
+            { name: '枇杷茶', code: '#AB6134', id: '073' },
+            { name: '琥珀色', code: '#CA6924', id: '074' },
+            { name: '淡香', code: '#FFA565', id: '075' },
+            { name: '朽葉色', code: '#FFA565', id: '076' },
+            { name: '金茶', code: '#C66B27', id: '077' },
+            { name: '丁子染', code: '#C66B27', id: '078' },
+            { name: '狐色', code: '#985629', id: '079' },
+            { name: '柴染', code: '#8C5939', id: '080' },
+            { name: '伽羅色', code: '#6A432D', id: '081' },
+            { name: '煤竹色', code: '#593A27', id: '082' },
+            { name: '白茶', code: '#C48E69', id: '083' },
+            { name: '黃土色', code: '#BE7F51', id: '084' },
+            { name: '銀煤竹', code: '#7D4E2D', id: '085' },
+            { name: '黃唐茶', code: '#B7702D', id: '086' },
+            { name: '媚茶', code: '#6B4423', id: '087' },
+            { name: '淺黃', code: '#F7BB7D', id: '088' },
+            { name: '山吹色', code: '#FFA400', id: '089' },
+            { name: '玉子色', code: '#FFA631', id: '090' },
+            { name: '櫨染', code: '#E08A1E', id: '091' },
+            { name: '山吹茶', code: '#CB7E1F', id: '092' },
+            { name: '桑染', code: '#C57F2E', id: '093' },
+            { name: '生壁色', code: '#785E49', id: '094' },
+            { name: '支子', code: '#FFB95A', id: '095' },
+            { name: '玉蜀黍色', code: '#FAA945', id: '096' },
+            { name: '白橡', code: '#CE9F6F', id: '097' },
+            { name: '黃橡', code: '#BB8141', id: '098' },
+            { name: '藤黃', code: '#FFB61E', id: '099' },
+            { name: '花葉色', code: '#FFB94E', id: '100' },
+            { name: '鳥之子色', code: '#E2BE9F', id: '101' },
+            { name: '鬱金色', code: '#E69B3A', id: '102' },
+            { name: '黃朽葉', code: '#E29C45', id: '103' },
+            { name: '利休白茶', code: '#B0927A', id: '104' },
+            { name: '利休茶', code: '#826B58', id: '105' },
+            { name: '灰汁色', code: '#7F6B5D', id: '106' },
+            { name: '肥後煤竹', code: '#7F5D3B', id: '107' },
+            { name: '路考茶', code: '#665343', id: '108' },
+            { name: '海松茶', code: '#4C3D30', id: '109' },
+            { name: '菜種油色', code: '#A17917', id: '110' },
+            { name: '黃海松茶', code: '#896C39', id: '111' },
+            { name: '鶯茶', code: '#5C4827', id: '112' },
+            { name: '菜之花色', code: '#E3B130', id: '113' },
+            { name: '藰安', code: '#E2B13C', id: '114' },
+            { name: '黃蘗', code: '#F3C13A', id: '115' },
+            { name: '蒸栗色', code: '#EFEACC', id: '116' },
+            { name: '青朽葉', code: '#AA8736', id: '117' },
+            { name: '鶸茶', code: '#957B38', id: '118' },
+            { name: '女郎花', code: '#D9B611', id: '119' },
+            { name: '鶯色', code: '#645530', id: '120' },
+            { name: '鶸色', code: '#BDA928', id: '121' },
+            { name: '青白橡', code: '#BBA46D', id: '122' },
+            { name: '柳茶', code: '#9C8A4D', id: '123' },
+            { name: '璃寛茶', code: '#534A32', id: '124' },
+            { name: '藍媚茶', code: '#473F2D', id: '125' },
+            { name: '苔色', code: '#8B7D3A', id: '126' },
+            { name: '海松色', code: '#524B2A', id: '127' },
+            { name: '千歲茶', code: '#3B3429', id: '128' },
+            { name: '梅幸茶', code: '#857C55', id: '129' },
+            { name: '岩井茶', code: '#5E5545', id: '130' },
+            { name: '鶸萌黃', code: '#7A942E', id: '131' },
+            { name: '柳煤竹', code: '#4D4B3A', id: '132' },
+            { name: '裏柳', code: '#BCB58C', id: '133' },
+            { name: '淡萌黃', code: '#8DB255', id: '134' },
+            { name: '柳染', code: '#8C9E5E', id: '135' },
+            { name: '萌黃', code: '#5B8930', id: '136' },
+            { name: '青丹', code: '#52593B', id: '137' },
+            { name: '松葉色', code: '#454D32', id: '138' },
+            { name: '薄青', code: '#8C9C76', id: '139' },
+            { name: '若竹色', code: '#6B9362', id: '140' },
+            { name: '柳鼠', code: '#817B69', id: '141' },
+            { name: '老竹色', code: '#5E644F', id: '142' },
+            { name: '千歲緑', code: '#374231', id: '143' },
+            { name: '緑', code: '#2A603B', id: '144' },
+            { name: '白緑', code: '#A5BA93', id: '145' },
+            { name: '錆青磁', code: '#898A74', id: '146' },
+            { name: '緑青', code: '#407A52', id: '147' },
+            { name: '木賊色', code: '#3D5D42', id: '148' },
+            { name: '禦納戸茶', code: '#3D4035', id: '149' },
+            { name: '青竹色', code: '#006442', id: '150' },
+            { name: '利休鼠', code: '#656255', id: '151' },
+            { name: 'びろうど', code: '#224634', id: '152' },
+            { name: '蟲襖', code: '#2D4436', id: '153' },
+            { name: '藍海松茶', code: '#2E372E', id: '154' },
+            { name: '沈香茶', code: '#5A6457', id: '155' },
+            { name: '水淺蔥', code: '#749F8D', id: '156' },
+            { name: '青磁色', code: '#819C8B', id: '157' },
+            { name: '青碧', code: '#3A6960', id: '158' },
+            { name: '錆鉄禦納戸', code: '#3A403B', id: '159' },
+            { name: '鉄色', code: '#2B3733', id: '160' },
+            { name: '禦召茶', code: '#354E4B', id: '161' },
+            { name: '高麗納戸', code: '#203838', id: '162' },
+            { name: '老竹色', code: '#769164', id: '163' },
+            { name: '木賊色', code: '#22825D', id: '164' },
+            { name: '常盤色', code: '#007B43', id: '165' },
+            { name: '湊鼠', code: '#757D75', id: '166' },
+            { name: '青鈍', code: '#4F4944', id: '167' },
+            { name: '鉄御納戸', code: '#2B3736', id: '168' },
+            { name: '水色', code: '#86ABA5', id: '169' },
+            { name: '錆淺蔥', code: '#6A7F7A', id: '170' },
+            { name: '瓶覗', code: '#A2D7DD', id: '171' },
+            { name: '淺蔥色', code: '#48929B', id: '172' },
+            { name: '淺蔥鼠', code: '#94A8B0', id: '173' },
+            { name: '新橋色', code: '#006C7F', id: '174' },
+            { name: '錆御納戸', code: '#455859', id: '175' },
+            { name: '藍鼠', code: '#5C544E', id: '176' },
+            { name: '藍色', code: '#264348', id: '177' },
+            { name: '御納戸色', code: '#364141', id: '178' },
+            { name: '花淺蔥', code: '#1D697C', id: '179' },
+            { name: '千草色', code: '#317589', id: '180' },
+            { name: '舛花色', code: '#4D646C', id: '181' },
+            { name: '縹', code: '#044F67', id: '182' },
+            { name: '熨斗目花色', code: '#344D56', id: '183' },
+            { name: '御召御納戸', code: '#3D4C51', id: '184' },
+            { name: '空色', code: '#4D8FAC', id: '185' },
+            { name: '黒橡', code: '#252321', id: '186' },
+            { name: '群青色', code: '#5D8CAE', id: '187' },
+            { name: '紺', code: '#192236', id: '188' },
+            { name: '褐色', code: '#181B26', id: '189' },
+            { name: '琉璃色', code: '#1F4788', id: '190' },
+            { name: '紺青色', code: '#003171', id: '191' },
+            { name: '瑠璃紺', code: '#1B294B', id: '192' },
+            { name: '紅碧', code: '#78779B', id: '193' },
+            { name: '紺桔梗', code: '#191F45', id: '194' },
+            { name: '藤鼠', code: '#766980', id: '195' },
+            { name: '紅掛花色', code: '#5A4F74', id: '196' },
+            { name: '藤色', code: '#89729E', id: '197' },
+            { name: '二藍', code: '#614E6E', id: '198' },
+            { name: '勿忘草', code: '#7DB9DE', id: '199' },
+            { name: '露草', code: '#2EA9DF', id: '200' },
+            { name: '淺蔥色', code: '#00A5BF', id: '201' },
+            { name: '藤紫', code: '#875F9A', id: '202' },
+            { name: '桔梗色', code: '#5D3F6A', id: '203' },
+            { name: '紫苑色', code: '#976E9A', id: '204' },
+            { name: '滅紫', code: '#3F313A', id: '205' },
+            { name: '紫紺', code: '#2B2028', id: '206' },
+            { name: '深紫', code: '#3A243B', id: '207' },
+            { name: '薄色', code: '#A87CA0', id: '208' },
+            { name: '半色', code: '#8D608C', id: '209' },
+            { name: '菫色', code: '#5B3256', id: '210' },
+            { name: '紫', code: '#4F284B', id: '211' },
+            { name: '黑紅', code: '#23191E', id: '212' },
+            { name: '菖蒲色', code: '#763568', id: '213' },
+            { name: '紅藤', code: '#BB7796', id: '214' },
+            { name: '杜若', code: '#491E3C', id: '215' },
+            { name: '鳩羽鼠', code: '#755D5B', id: '216' },
+            { name: '葡萄鼠', code: '#63424B', id: '217' },
+            { name: '蒲萄', code: '#6D2B50', id: '218' },
+            { name: '藤煤竹', code: '#4D3B3C', id: '219' },
+            { name: '牡丹', code: '#A4345D', id: '220' },
+            { name: '梅紫', code: '#8F4155', id: '221' },
+            { name: '似せ紫', code: '#43242A', id: '222' },
+            { name: '紫鳶', code: '#512C31', id: '223' },
+            { name: '蘇芳', code: '#7E2639', id: '224' },
+            { name: '桑染', code: '#59292C', id: '225' },
+            { name: '紅消鼠', code: '#44312E', id: '226' },
+            { name: '竜膽色', code: '#6967AB', id: '227' },
+            { name: '白練', code: '#F3F3F2', id: '228' },
+            { name: '白鼠', code: '#B9A193', id: '229' },
+            { name: '銀鼠', code: '#97867C', id: '230' },
+            { name: '素鼠', code: '#6E5F57', id: '231' },
+            { name: '丼鼠', code: '#4B3C39', id: '232' },
+            { name: '藍墨茶', code: '#393432', id: '233' },
+            { name: '檳榔子染', code: '#352925', id: '234' },
+            { name: '墨色', code: '#27221F', id: '235' },
+            { name: '黒色', code: '#171412', id: '236' },
+            { name: '卯之花色', code: '#FBFBF6', id: '237' }	
+        ];
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function createColorCard(color, section) {
+            const rgb = hexToRgb(color.code);
+            const rgbText = rgb ? `RGB(${rgb.r}, ${rgb.g}, ${rgb.b})` : '';
+            
+            return `
+                <div class="color-card" onclick="selectColor(this, '${section}')" data-color="${color.code}" data-name="${color.name}" data-rgb="${rgbText}">
+                    <div class="color-sample" style="background-color: ${color.code}"></div>
+                    <div class="color-info">
+                        <div class="color-name">${color.name}</div>
+                        <div class="color-codes">
+                            <div class="color-hex">${color.code}</div>
+                            <div class="color-rgb">${rgbText}</div>
+                        </div>
+                    </div>
+                    <div class="color-id">${color.id}</div>
+                </div>
+            `;
+        }
+
+        function initializeColorGrids() {
+            const gridA = document.querySelector('#sectionA .color-grid');
+            const gridB = document.querySelector('#sectionB .color-grid');
+            
+            gridA.innerHTML = '';
+            gridB.innerHTML = '';
+            
+            colors.forEach(color => {
+                gridA.innerHTML += createColorCard(color, 'A');
+                gridB.innerHTML += createColorCard(color, 'B');
+            });
+        }
+
+        let selectedColors = {
+            A: null,
+            B: null
+        };
+
+        function selectColor(element, section) {
+            document.querySelectorAll(`#section${section} .color-card`).forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            
+            selectedColors[section] = {
+                color: element.dataset.color,
+                name: element.dataset.name,
+                rgb: element.dataset.rgb
+            };
+            
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('preview');
+            
+            if (selectedColors.A && selectedColors.B) {
+                document.body.style.background = `linear-gradient(90deg, ${selectedColors.A.color}, ${selectedColors.B.color})`;
+                preview.innerHTML = `
+                    <div class="preview-section">
+                        <div class="preview-label">左側顏色</div>
+                        <div class="preview-value">${selectedColors.A.name}</div>
+                        <div class="preview-value">${selectedColors.A.rgb}</div>
+                        <div class="preview-value">${selectedColors.A.color}</div>
+                    </div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-section">
+                        <div class="preview-label">右側顏色</div>
+                        <div class="preview-value">${selectedColors.B.name}</div>
+                        <div class="preview-value">${selectedColors.B.rgb}</div>
+                        <div class="preview-value">${selectedColors.B.color}</div>
+                    </div>
+                `;
+            }
+        }
+
+        initializeColorGrids();
+    </script>
+</body>
+</html>
