@@ -37,3 +37,5 @@ git clone https://github.com/your-username/color-gradient-picker.git
 ## 開源協議
 
 本項目基於 MIT 協議開源
+
+## 作者 Sorina
